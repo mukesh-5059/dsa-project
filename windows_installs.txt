@@ -1,0 +1,3 @@
+libosmium    protozero    expat    zlib    bzip2    boost-program-options    raylib
+
+install using vcpkg
