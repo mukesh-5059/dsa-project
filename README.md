@@ -1,5 +1,10 @@
 # OSMPathfinder
 
+## Download map
+
+Download the map from this website https://download.geofabrik.de/
+download the .osm.pbf file
+
 ## Project Structure
 ```text
 .
