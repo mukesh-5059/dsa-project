@@ -1,6 +1,5 @@
 #include <map_reader.hpp>
 #include <map_renderer.hpp>
-#include <iostream>
 
 int main(){
 

@@ -1,1 +1,1 @@
-boost-1.89.0-4  libosmium-2.23.0-1  protozero-1.8.1-1  raylib-5.5-1
+boost-1.89.0-4  libosmium-2.23.0-1  protozero-1.8.1-1  raylib-5.5-1  osmium-tool-1.19.0-1  osmium-tool-debug-1.19.0-1
