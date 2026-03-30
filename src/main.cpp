@@ -4,7 +4,7 @@
 int main(){
 
     //do shit
-    std::cout << "shit" << std::endl;
+    doItAll();
 
     return 0;
 }

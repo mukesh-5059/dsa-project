@@ -1,4 +1,5 @@
-#include <stdlib.h>    
+#include <stdio.h>
+#include <stdlib.h>
 
 struct node {
     int id;
@@ -12,24 +13,28 @@ class way {
     public:
     way(){
         id = 1;
+        nodes = NULL;
+        nodeCount = 0;
+    }
+
+    void init(int wayID, int n0, int n1) {
+        id = wayID;
         nodeCount = 2;
-        nodes = (int *)malloc(nodeCount * sizeof(int));
-        nodes[0] = 1;
-        nodes[1] = 2;
+        nodes = (int*)malloc(sizeof(int) * nodeCount);
+        nodes[0] = n0;
+        nodes[1] = n1;
     }
     void writeToCache(FILE *f){
-        int ind;
         fwrite(&id, sizeof(int), 1, f);
         fwrite(&nodeCount, sizeof(int), 1, f);
-        for(int i = 0; i<nodeCount; i++){
-            fwrite(nodes, sizeof(int), nodeCount, f);
-        }
+        fwrite(nodes, sizeof(int), nodeCount, f);
     }
     void readFromCache(FILE *f){
         fread(&id, sizeof(int), 1, f);
         fread(&nodeCount, sizeof(int), 1, f);
         nodes = (int *)malloc(nodeCount * sizeof(int));
         fread(nodes, sizeof(int), nodeCount, f);
+        printf("Way:%d %d\n", id, nodeCount);
     }
     void wrapUp(){
         free(nodes);
@@ -44,11 +49,18 @@ class chunk{
         ways = NULL;
         wayCount = 0;
     }
-    chunk(int wayCount){
-        this->wayCount = wayCount;
+    
+    chunk(int quadrant) {
+        this->wayCount = 10;
         ways = (way *)malloc(sizeof(way) * wayCount);
-        for(int  i = 0; i<wayCount; i++){
-            ways[i] = way();
+        
+        int xOff = (quadrant % 2) * 16;
+        int yOff = (quadrant / 2) * 16;
+        
+        for(int i = 0; i < wayCount; i++) {
+            int n0 = (yOff + i) * 32 + (xOff);
+            int n1 = (yOff + i) * 32 + (xOff + 1);
+            ways[i].init(quadrant * 100 + i, n0, n1);
         }
     }
     void writeToCache(FILE *f){
@@ -70,7 +82,6 @@ class chunk{
     }
 };
 
-
 class map{
     int chunkSize, noOfChunks;
     chunk *chunks;
@@ -85,7 +96,7 @@ class map{
         this->chunkSize = chunkSize;
         chunks = (chunk *)malloc(sizeof(chunk) * noOfChunks);
         for(int i = 0; i<noOfChunks; i++){
-            chunks[i] = chunk(chunkSize);
+            chunks[i] = chunk(i);
         }
     }
     void writeToCache(FILE *f){
@@ -110,8 +121,8 @@ class map{
     }
 };
 
-
 struct node* readNodesFromMap(FILE *f);
 struct node* readNodesFromCache(FILE *f);
 map readMapFromMap(FILE *f);
 map readMapFromCache(FILE *f);
+int doItAll();

@@ -1,16 +1,15 @@
-#include <stdio.h>
 #include "map_reader.hpp"
 
 struct node* readNodesFromMap(FILE *f){
-    int n = 5;
-    double lat, lon;
+    int n = 1024;
     struct node *nodes = (struct node *)malloc(sizeof(struct node) * n);
-    for(int i = 0; i<n; i++){
-        nodes[i].id = i;
-        lat = i*n + 2;
-        lon = i*n + 1;
-        nodes[i].x = lat - 2;
-        nodes[i].y = lon - 1;
+    for(int i = 0; i < 32; i++) {
+        for(int j = 0; j < 32; j++) {
+            int index = i * 32 + j;
+            nodes[index].id = index;
+            nodes[index].x = j * 20.0;
+            nodes[index].y = i * 20.0;
+        }
     }
     fwrite(&n, sizeof(int), 1, f);
     fwrite(nodes, sizeof(struct node), n, f);
@@ -22,14 +21,13 @@ struct node* readNodesFromCache(FILE *f){
     fread(&n, sizeof(int), 1, f);
     struct node *nodes = (struct node*)malloc(sizeof(struct node) * n);
     fread(nodes, sizeof(struct node), n, f);
+    printf("Nodes: %d\n", n);
     return nodes;
 }
 
 map readMapFromMap(FILE *f){
-    int size = 5;
-    int n = 10;
     map mapObj;
-    mapObj.readChunks(size, n);
+    mapObj.readChunks(16, 4);
     mapObj.writeToCache(f);
     return mapObj;
 }
@@ -40,7 +38,7 @@ map readMapFromCache(FILE *f){
     return mapObj;
 }
 
-int main(){
+int doItAll(){
     FILE *f = fopen("map_data/map.bin", "rb");
     struct node *nodes;
     map mapObj;
@@ -55,7 +53,6 @@ int main(){
         nodes = readNodesFromCache(f);
         mapObj = readMapFromCache(f);
     }
-
     mapObj.wrapUp();
     free(nodes);
     if(f) fclose(f);
