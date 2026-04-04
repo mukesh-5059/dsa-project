@@ -1,4 +1,5 @@
 libosmium    protozero    expat    zlib    bzip2    boost-program-options    raylib
+Standard C++ Multithreading Headers (<thread>, <mutex>, etc.)
 install using vcpkg
 
 cmake and make 

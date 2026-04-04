@@ -15,7 +15,7 @@ public:
     OsmHandler(MapData& data) : m_data(data) {}
 
     void node(const osmium::Node& node) {
-        m_data.nodes[node.id()] = {node.id(), node.location().lat(), node.location().lon()};
+        m_data.nodes[node.id()] = {node.location().lat(), node.location().lon()};
     }
 
     void way(const osmium::Way& way) {

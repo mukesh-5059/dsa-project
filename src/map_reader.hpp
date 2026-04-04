@@ -3,13 +3,12 @@
 
 #include <vector>
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <osmium/osm/node.hpp>
 #include <osmium/osm/way.hpp>
 #include <osmium/osm/location.hpp>
 
 struct NodeData {
-    long long id;
     double lat;
     double lon;
 };
@@ -17,7 +16,7 @@ struct NodeData {
 struct WayData {
     long long id;
     std::vector<long long> node_ids;
-    std::map<std::string, std::string> tags;
+    std::unordered_map<std::string, std::string> tags;
 };
 
 struct MapBounds {
@@ -29,7 +28,7 @@ struct MapBounds {
 
 class MapData {
 public:
-    std::map<long long, NodeData> nodes;
+    std::unordered_map<long long, NodeData> nodes;
     std::vector<WayData> ways;
     MapBounds bounds;
 

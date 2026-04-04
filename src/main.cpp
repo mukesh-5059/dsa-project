@@ -1,20 +1,30 @@
 #include "map_reader.hpp"
-#include "map_renderer.hpp"
+#include "map_viewer.hpp"
 #include <iostream>
 #include <boost/program_options.hpp>
 #include <filesystem>
+#include <csignal>
+#include <atomic>
 
 namespace po = boost::program_options;
 namespace fs = std::filesystem;
 
+std::atomic<bool> stop_flag{false};
+
+void signal_handler(int signal) {
+    std::cout << "\n[SIGINT] Interrupt received. Initiating graceful shutdown...\n";
+    stop_flag = true;
+}
+
 int main(int argc, char* argv[]) {
+    // Register signal handler for graceful shutdown
+    std::signal(SIGINT, signal_handler);
+
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "produce help message")
-        ("rebuild-cache", "re-parse OSM data and recreate tiles")
-        ("res,r", po::value<int>()->default_value(1024), "resolution of each tile in pixels")
-        ("tile-size,s", po::value<double>()->default_value(1.0), "physical size of each tile in km")
-        ("render", "start the interactive map viewer");
+        ("clean", "delete the existing tile cache to start over")
+        ("pbf", po::value<std::string>()->default_value("map_data/chennai_city.osm.pbf"), "path to OSM PBF file");
 
     po::variables_map vm;
     try {
@@ -30,42 +40,39 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    std::string pbfPath = "map_data/map_small.osm.pbf";
+    // --- Core Parameters ---
+    int textureRes = 4096;
+    double tileSizeKm = 10.0;
+    std::string pbfPath = vm["pbf"].as<std::string>();
     std::string tilesDir = "map_data/tiles";
 
-    if (vm.count("rebuild-cache")) {
-        std::cout << "Rebuilding cache...\n";
+    std::cout << "--- JIT MAP ENGINE ---" << std::endl;
+
+    if (vm.count("clean")) {
+        std::cout << "Cleaning cache directory: " << tilesDir << "...\n";
         if (fs::exists(tilesDir)) {
             fs::remove_all(tilesDir);
         }
-        
-        MapData mapData;
-        std::cout << "Loading OSM data from " << pbfPath << "..." << std::endl;
-        mapData.loadFromPbf(pbfPath);
-
-        int res = vm["res"].as<int>();
-        double tileSize = vm["tile-size"].as<double>();
-        
-        std::cout << "Generating raster tiles in " << tilesDir << "..." << std::endl;
-        MapRenderer::generateTiles(mapData, res, tileSize, tilesDir);
-        std::cout << "Cache rebuilt successfully.\n";
+        std::cout << "Cache cleaned.\n";
     }
 
-    if (vm.count("render")) {
-        if (!fs::exists(tilesDir + "/metadata.txt")) {
-            std::cerr << "Error: Cache not found. Please run with --rebuild-cache first.\n";
-            return 1;
-        }
+    MapData mapData;
+    std::cout << "Loading OSM data from " << pbfPath << "..." << std::endl;
+    mapData.loadFromPbf(pbfPath);
 
-        std::cout << "Starting renderer...\n";
-        // TODO: Implement Phase 2: Runtime Renderer
-        // For now, just a placeholder
-        std::cout << "Phase 2 implementation coming soon!\n";
+    if (stop_flag) goto cleanup;
+
+    std::cout << "Launching Interactive Viewer..." << std::endl;
+    {
+        MapViewer viewer(tilesDir, mapData, textureRes, tileSizeKm, stop_flag);
+        viewer.run();
     }
 
-    if (!vm.count("rebuild-cache") && !vm.count("render")) {
-        std::cout << "No action specified. Use --help for options.\n";
-    }
+cleanup:
+    std::cout << "Cleaning up memory..." << std::endl;
+    mapData.nodes.clear();
+    mapData.ways.clear();
+    std::cout << "Cleanup complete. Goodbye!" << std::endl;
 
     return 0;
 }
