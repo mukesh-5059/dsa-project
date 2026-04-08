@@ -20,6 +20,13 @@ struct MapMetadata {
     double degLonPerTile, degLatPerTile;
 };
 
+struct MapLabel {
+    std::string name;
+    Vector2 worldPos;
+    Color color;
+    int adminLevel;
+};
+
 // Hash for unordered_map of pairs
 struct pair_hash {
     inline std::size_t operator()(const std::pair<int, int> & v) const {
@@ -40,6 +47,7 @@ private:
     void handleInput();
     void updateVisibleTiles();
     void draw();
+    void drawLegend();
 
     // Thread pool functions
     void workerThread();
@@ -50,6 +58,9 @@ private:
     MapMetadata m_meta;
     Camera2D m_camera;
     std::atomic<bool>& m_stopFlag;
+    
+    bool m_showLegend = false;
+    std::vector<MapLabel> m_labels;
     
     // Buckets: {row, col} -> list of ways in that tile
     std::unordered_map<std::pair<int, int>, std::vector<const WayData*>, pair_hash> m_buckets;

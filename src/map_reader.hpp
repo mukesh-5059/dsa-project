@@ -19,6 +19,13 @@ struct WayData {
     std::unordered_map<std::string, std::string> tags;
 };
 
+struct PlaceData {
+    std::string name;
+    double lat;
+    double lon;
+    int admin_level;
+};
+
 struct MapBounds {
     double min_lat;
     double min_lon;
@@ -30,6 +37,7 @@ class MapData {
 public:
     std::unordered_map<long long, NodeData> nodes;
     std::vector<WayData> ways;
+    std::vector<PlaceData> places;
     MapBounds bounds;
 
     void loadFromPbf(const std::string& filename);

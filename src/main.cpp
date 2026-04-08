@@ -12,17 +12,16 @@ namespace fs = std::filesystem;
 std::atomic<bool> stop_flag{false};
 
 void signal_handler(int signal) {
-    std::cout << "\n[SIGINT] Interrupt received. Initiating graceful shutdown...\n";
+    std::cout << "\n[SIGINT] Interrupt received. shutingdown...\n";
     stop_flag = true;
 }
 
 int main(int argc, char* argv[]) {
-    // Register signal handler for graceful shutdown
+    // Register signal handler for shutdown
     std::signal(SIGINT, signal_handler);
 
-    po::options_description desc("Allowed options");
+    po::options_description desc("Options");
     desc.add_options()
-        ("help,h", "produce help message")
         ("clean", "delete the existing tile cache to start over")
         ("pbf", po::value<std::string>()->default_value("map_data/chennai_city.osm.pbf"), "path to OSM PBF file");
 
@@ -35,18 +34,13 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    if (vm.count("help")) {
-        std::cout << desc << "\n";
-        return 0;
-    }
-
     // --- Core Parameters ---
-    int textureRes = 4096;
-    double tileSizeKm = 10.0;
+    int textureRes = 4096;      
+    double tileSizeKm = 5.0;    
     std::string pbfPath = vm["pbf"].as<std::string>();
     std::string tilesDir = "map_data/tiles";
 
-    std::cout << "--- JIT MAP ENGINE ---" << std::endl;
+    std::cout << "--- Map Loading ---" << std::endl;
 
     if (vm.count("clean")) {
         std::cout << "Cleaning cache directory: " << tilesDir << "...\n";
@@ -62,7 +56,7 @@ int main(int argc, char* argv[]) {
 
     if (stop_flag) goto cleanup;
 
-    std::cout << "Launching Interactive Viewer..." << std::endl;
+    std::cout << "---- Map Viewer ----" << std::endl;
     {
         MapViewer viewer(tilesDir, mapData, textureRes, tileSizeKm, stop_flag);
         viewer.run();
@@ -70,9 +64,11 @@ int main(int argc, char* argv[]) {
 
 cleanup:
     std::cout << "Cleaning up memory..." << std::endl;
-    mapData.nodes.clear();
-    mapData.ways.clear();
-    std::cout << "Cleanup complete. Goodbye!" << std::endl;
+    // The "Swap Trick": clear() only resets size, swap() actually deallocates the capacity back to the OS.
+    std::unordered_map<long long, NodeData>().swap(mapData.nodes);
+    std::vector<WayData>().swap(mapData.ways);
+    std::vector<PlaceData>().swap(mapData.places);
+    std::cout << "Cleanup complete." << std::endl;
 
     return 0;
 }
