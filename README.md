@@ -2,8 +2,7 @@
 
 ## Download map
 
-Download the map from this website https://download.geofabrik.de/
-download the .osm.pbf file
+Map is downloaded and placed in /map_data
 
 ## Project Structure
 ```text
