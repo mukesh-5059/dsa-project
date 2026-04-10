@@ -63,19 +63,19 @@ void MapData::loadFromPbf(const std::string& filename) {
     osmium::apply(reader, location_handler, handler);
     reader.close();
 
-    //this->bounds.min_lat = 12.79;
-    //this->bounds.max_lat = 13.18;
-    //this->bounds.min_lon = 79.98;
-    //this->bounds.max_lon = 80.34;
+    this->bounds.min_lat = 12.79;
+    this->bounds.max_lat = 13.18;
+    this->bounds.min_lon = 79.98;
+    this->bounds.max_lon = 80.34;
 
-    if (!nodes.empty()) {
-        this->bounds = {90.0, 180.0, -90.0, -180.0};
-        for (const auto& [id, node] : nodes) {
-            if (node.lat < bounds.min_lat) bounds.min_lat = node.lat;
-            if (node.lon < bounds.min_lon) bounds.min_lon = node.lon;
-            if (node.lat > bounds.max_lat) bounds.max_lat = node.lat;
-            if (node.lon > bounds.max_lon) bounds.max_lon = node.lon;
-        }
-    }
+    //if (!nodes.empty()) {
+    //    this->bounds = {90.0, 180.0, -90.0, -180.0};
+    //    for (const auto& [id, node] : nodes) {
+    //        if (node.lat < bounds.min_lat) bounds.min_lat = node.lat;
+    //        if (node.lon < bounds.min_lon) bounds.min_lon = node.lon;
+    //        if (node.lat > bounds.max_lat) bounds.max_lat = node.lat;
+    //        if (node.lon > bounds.max_lon) bounds.max_lon = node.lon;
+    //    }
+    //}
     std::cout << "Loaded " << nodes.size() << " nodes, " << ways.size() << " ways, and " << places.size() << " places.\n";
 }

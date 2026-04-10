@@ -10,7 +10,7 @@ find_package(EXPAT REQUIRED)
 find_package(BZip2 REQUIRED)
 
 # 2. Boost & Raylib
-find_package(Boost REQUIRED COMPONENTS program_options)
+find_package(Boost REQUIRED)
 find_package(raylib REQUIRED)
 
 # 3. Osmium & Protozero
@@ -28,6 +28,5 @@ add_executable(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PRIVATE src ${OSMIUM_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     ${OSMIUM_LIBRARIES}
-    Boost::program_options
     raylib
 )

@@ -1,0 +1,132 @@
+AA Block -> neighbourhood
+AB Block -> neighbourhood
+AC Block -> neighbourhood
+AGS Colony -> neighbourhood
+AGS Officers Colony -> neighbourhood
+All India Radio Housing Board -> neighbourhood
+Alwarthiru Nagar -> neighbourhood
+Anis Nagar -> neighbourhood
+Annai Sathya Nagar Nesapakkam -> neighbourhood
+Arul Nagar -> neighbourhood
+Arunachalapuram -> neighbourhood
+Aspiran Garden -> neighbourhood
+Avvai Nagar -> neighbourhood
+Aziz Nagar -> neighbourhood
+Bakhtavachalam Nagar -> neighbourhood
+Bakthavatchalam Nagar -> neighbourhood
+Bharathipuram -> neighbourhood
+Bhuvaneswary Nagar -> neighbourhood
+Central Government Officers Quarters, General Pool Accomodation -> neighbourhood
+Cherian Nagar -> neighbourhood
+Chowdhary Nagar -> neighbourhood
+CIT Nagar -> neighbourhood
+Damodarapuram -> neighbourhood
+Dandhesswaram -> neighbourhood
+Doveton -> neighbourhood
+Dwaraka Nagar -> suburb
+East Abhiramapuram -> neighbourhood
+E Block -> neighbourhood
+Ellaiamman Colony -> neighbourhood
+Evening Bazaar -> neighbourhood
+F Block -> neighbourhood
+Gerugambakkam -> suburb
+Golden Friends Smart City -> neighbourhood
+Government Estate -> neighbourhood
+Govindaswamy Nagar -> neighbourhood
+Grace Garden -> neighbourhood
+HVF Estate -> neighbourhood
+ICF Colony -> suburb
+Indra Nagar -> neighbourhood
+Isha Garden -> neighbourhood
+JagannathaPuram -> neighbourhood
+Jalladampet -> suburb
+Jeevarathinam Nagar -> neighbourhood
+Jeth Nagar -> neighbourhood
+Jothiammal Nagar -> neighbourhood
+Judge's Colony -> neighbourhood
+Kadapakkam -> suburb
+Kaladipet -> neighbourhood
+Kamakoti Nagar -> neighbourhood
+Kamatchi Nagar -> neighbourhood
+Kandaswamy Nagar -> neighbourhood
+Kannappa Nagar -> neighbourhood
+Kargil Nagar -> suburb
+Karpagam Avenue -> neighbourhood
+Karthikeyapuram -> neighbourhood
+Kellys -> neighbourhood
+Kesavaperumalpuram -> neighbourhood
+Kilpauk Garden -> neighbourhood
+K.K.Nagar -> suburb
+Kottur Gardens -> neighbourhood
+Kuberan Nagar -> neighbourhood
+Labour Colony -> neighbourhood
+Lakshmi Hayagriva Nagar -> neighbourhood
+Lloyds Colony -> neighbourhood
+Lock Nagar -> neighbourhood
+Lotus Colony -> neighbourhood
+Madura Kali Nagar -> neighbourhood
+Mahalingapuram -> neighbourhood
+Malar Colony -> neighbourhood
+Metukuppam -> neighbourhood
+Moogambigai Nagar -> neighbourhood
+Moolakothalam -> neighbourhood
+MRC Nagar -> suburb
+Nagerkoyil Sudalaimuthu Krishnan Nagar -> neighbourhood
+Nandanam Extension -> neighbourhood
+Nanganallur Co-op Society Colony -> neighbourhood
+Narasimha Nagar -> neighbourhood
+Narayanapuram -> suburb
+NATCO Colony -> neighbourhood
+Natesan Colony -> neighbourhood
+Nazarethpuram -> suburb
+NCBS Colony -> neighbourhood
+Nesamani Nagar -> suburb
+New Colony -> neighbourhood
+Officers Colony -> neighbourhood
+Park Square colony -> neighbourhood
+Periamet -> neighbourhood
+Poompozhil Nagar -> suburb
+PTC Colony -> neighbourhood
+Pudupet -> neighbourhood
+PVS Nagar -> neighbourhood
+Rajalakshmi Nagar -> neighbourhood
+Ramalinga Nagar -> neighbourhood
+Sai Nagar -> neighbourhood
+Sangam Colony -> neighbourhood
+Santoshapuram -> suburb
+Secretariat Colony -> neighbourhood
+Seethammal Colony Ext -> neighbourhood
+Seethammal Colony -> neighbourhood
+Seethapathy Nagar -> neighbourhood
+Sekkadu -> suburb
+Serene Avenue -> neighbourhood
+Seshadripuram -> neighbourhood
+Seva Nagar Velachery -> neighbourhood
+Sheela Nagar -> neighbourhood
+Sivakami Nagar -> neighbourhood
+Skylab Avenue -> neighbourhood
+Srinivasa Nagar -> neighbourhood
+Stanley Nagar -> neighbourhood
+St. Thomas Mount Cantonment -> suburb
+Sunnambu Kulathur -> suburb
+Swaminathan Nagar -> neighbourhood
+T Block -> neighbourhood
+Thendral Nagar -> neighbourhood
+Thillai Ganga Nagar -> neighbourhood
+Thiruvalluvar Nagar -> neighbourhood
+Thiru Vi Ka Nagar -> suburb
+TNagar -> suburb
+Todhunter Nagar -> neighbourhood
+Tollgate -> neighbourhood
+Uranus Apartments -> neighbourhood
+Urur Kuppam -> neighbourhood
+Vaniya Teynampet -> neighbourhood
+Varadapuram -> neighbourhood
+Vardhaman Nagar -> neighbourhood
+Veerabadhra Nagar -> neighbourhood
+Velayudam Colony -> neighbourhood
+Venkateshpuram -> neighbourhood
+VGN Grandeur -> neighbourhood
+VGP Selva Nagar -> neighbourhood
+W Block -> neighbourhood
+Zam Bazaar -> neighbourhood
