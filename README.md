@@ -8,6 +8,7 @@ Map is downloaded and placed in /map_data
 ```text
 .
 ├── src/                # Source files (.cpp, .hpp)
+├── map_data/           # has the details about the map
 ├── cmake/              # Custom CMake files for osmium and protozero
 ├── build/              # Build files(make it yourself)
 ├── CMakeLists.txt      # Main cmake file
