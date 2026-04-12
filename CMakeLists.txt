@@ -22,6 +22,7 @@ add_executable(${PROJECT_NAME}
     src/map_reader.cpp 
     src/map_renderer.cpp
     src/map_viewer.cpp
+    src/path_finding.cpp
 )
 
 # 4. Link everything

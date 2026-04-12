@@ -5,6 +5,8 @@
 #include <osmium/index/map/sparse_mem_array.hpp>
 #include <osmium/handler/node_locations_for_ways.hpp>
 #include <iostream>
+#include <limits>
+#include <cmath>
 
 using index_type = osmium::index::map::SparseMemArray<osmium::unsigned_object_id_type, osmium::Location>;
 using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
@@ -144,14 +146,12 @@ long long MapData::findNearestNode(double lat, double lon) {
         }
     };
 
-    // Search target bucket and immediate neighbors (1km x 1km or 5km x 5km)
     for (int dr = -1; dr <= 1; dr++) {
         for (int dc = -1; dc <= 1; dc++) {
             searchInBucket(r + dr, c + dc);
         }
     }
 
-    // Fallback to full search only if no road node was found in local neighborhood
     if (nearestId == -1) {
         std::cout << "Warning: No road node found in local buckets, performing full search..." << std::endl;
         for (const auto& [id, node] : nodes) {
@@ -165,4 +165,44 @@ long long MapData::findNearestNode(double lat, double lon) {
         }
     }
     return nearestId;
+}
+
+double distanceBetweenPoints(const NodeData& a, const NodeData& b) {
+    const double R = 6371.0; // km
+    double dLat = (b.lat - a.lat) * M_PI / 180.0;
+    double dLon = (b.lon - a.lon) * M_PI / 180.0;
+    double lat1 = a.lat * M_PI / 180.0;
+    double lat2 = b.lat * M_PI / 180.0;
+    double x = sin(dLat / 2.0) * sin(dLat / 2.0) +
+               sin(dLon / 2.0) * sin(dLon / 2.0) * cos(lat1) * cos(lat2);
+    double y = 2.0 * atan2(sqrt(x), sqrt(1.0 - x));
+    return R * y;
+}
+
+void MapData::makeAdjacencyList() {
+    adjacencyList.clear();
+    std::cout << "Building adjacency list from road network..." << std::endl;
+    int edgesCount = 0;
+    for (const auto& way : ways) {
+        if (!way.tags.count("highway")) continue;
+        bool oneway = false;
+        if (way.tags.count("oneway")) {
+            std::string val = way.tags.at("oneway");
+            if (val == "yes" || val == "1" || val == "true") oneway = true;
+        }
+        for (size_t i = 0; i < way.node_ids.size() - 1; i++) {
+            long long u = way.node_ids[i];
+            long long v = way.node_ids[i+1];
+            if (nodes.count(u) && nodes.count(v)) {
+                double dist = distanceBetweenPoints(nodes[u], nodes[v]);
+                adjacencyList[u].push_back({v, dist});
+                edgesCount++;
+                if (!oneway) {
+                    adjacencyList[v].push_back({u, dist});
+                    edgesCount++;
+                }
+            }
+        }
+    }
+    std::cout << "Adjacency list built with " << adjacencyList.size() << " vertices and " << edgesCount << " edges." << std::endl;
 }

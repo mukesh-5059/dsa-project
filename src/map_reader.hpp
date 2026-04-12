@@ -39,12 +39,19 @@ struct map_pair_hash {
     }
 };
 
+struct Edge {
+    long long to;
+    double weight;
+};
+
 class MapData {
 public:
     std::unordered_map<long long, NodeData> nodes;
     std::vector<WayData> ways;
     std::vector<PlaceData> places;
     MapBounds bounds;
+
+    std::unordered_map<long long, std::vector<Edge>> adjacencyList;
 
     std::unordered_map<std::pair<int, int>, std::vector<const WayData*>, map_pair_hash> buckets;
     double degLonPerBucket = 0.01;
@@ -59,9 +66,11 @@ public:
     bool hasStart = false;
     bool hasEnd = false;
     std::vector<long long> pathNodeIds;
+    double pathCost = 0.0;
 
     void loadFromPbf(const std::string& filename);
     void buildBuckets(double kmPerBucket = 1.0);
+    void makeAdjacencyList();
     long long findNearestNode(double lat, double lon);
 };
 

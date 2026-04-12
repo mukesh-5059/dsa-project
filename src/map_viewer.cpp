@@ -1,4 +1,5 @@
 #include "map_viewer.hpp"
+#include "path_finding.hpp"
 #include <raymath.h>
 #include <filesystem>
 #include <iostream>
@@ -16,7 +17,7 @@ MapViewer::MapViewer(const std::string& tilesDir, MapData& data, int res, double
     m_camera.target = { worldWidth / 2.0f, worldHeight / 2.0f };
     m_camera.rotation = 0.0f;
     m_camera.zoom = 0.01f;
-    tilesInVram = 16;
+    tilesInVram = 32;
 }
 
 MapViewer::~MapViewer() {
@@ -78,11 +79,8 @@ void MapViewer::handleInput() {
                 m_mapData.hasStart = true;
                 std::cout << "Start point set to Node " << id << ": " << m_mapData.startNode.lat << ", " << m_mapData.startNode.lon << std::endl;
                 
-                // to be replaced with pathfinding
-                m_mapData.pathNodeIds.clear();
                 if (m_mapData.hasEnd) {
-                    m_mapData.pathNodeIds.push_back(m_mapData.startNodeId);
-                    m_mapData.pathNodeIds.push_back(m_mapData.endNodeId);
+                    findPath(m_mapData, m_mapData.startNodeId, m_mapData.endNodeId);
                 }
             }
         }
@@ -94,11 +92,8 @@ void MapViewer::handleInput() {
                 m_mapData.hasEnd = true;
                 std::cout << "End point set to Node " << id << ": " << m_mapData.endNode.lat << ", " << m_mapData.endNode.lon << std::endl;
                 
-                // to be replaced with pathfinding
-                m_mapData.pathNodeIds.clear();
                 if (m_mapData.hasStart) {
-                    m_mapData.pathNodeIds.push_back(m_mapData.startNodeId);
-                    m_mapData.pathNodeIds.push_back(m_mapData.endNodeId);
+                    findPath(m_mapData, m_mapData.startNodeId, m_mapData.endNodeId);
                 }
             }
         }
@@ -251,13 +246,14 @@ void MapViewer::draw() {
     DrawTextEx(GetFontDefault(), "HOME", {homeX + baseRadius, homeY - 20.0f * markerScale}, 20.0f * markerScale, 2.0f, GREEN);
     EndMode2D();
 
-    DrawRectangle(10, 10, 300, 120, Fade(BLACK, 0.8f));
+    DrawRectangle(10, 10, 300, 140, Fade(BLACK, 0.8f));
     DrawText("MAP VIEWER", 20, 20, 10, SKYBLUE);
     DrawText("Right Click: Pan | Wheel: Zoom", 20, 35, 10, WHITE);
     DrawText(TextFormat("Tiles in VRAM: %d / %d", (int)m_tileCache.size(), (int)tilesInVram), 20, 50, 10, GREEN);
     DrawText(TextFormat("Zoom: %.4f | 'L' for Legend", m_camera.zoom), 20, 65, 10, WHITE);
     DrawText(TextFormat("FPS: %d", GetFPS()), 20, 80, 10, LIME);
-    if (m_meta.textureRes * m_camera.zoom < 64.0f) DrawText("ZOOM IN TO RENDER TILES", 20, 95, 10, YELLOW);
+    DrawText(TextFormat("Route Distance: %.2f km", m_mapData.pathCost), 20, 95, 10, SKYBLUE);
+    if (m_meta.textureRes * m_camera.zoom < 64.0f) DrawText("ZOOM IN TO RENDER TILES", 20, 110, 10, YELLOW);
     if (m_showLegend) drawLegend();
     EndDrawing();
 }

@@ -1,6 +1,7 @@
 #include "map_reader.hpp"
 #include "map_viewer.hpp"
 #include "map_renderer.hpp"
+#include "path_finding.hpp"
 #include <iostream>
 #include <filesystem>
 #include <string>
@@ -33,6 +34,9 @@ int main() {
     
     std::cout << "Building spatial index (buckets)..." << std::endl;
     mapData.buildBuckets(tileSizeKm);
+    
+    std::cout << "Building adjacency list for pathfinding..." << std::endl;
+    mapData.makeAdjacencyList();
 
     if (!fs::exists(tilesDir) || fs::is_empty(tilesDir)) {
         std::cout << "Cache not found or empty...\n";
