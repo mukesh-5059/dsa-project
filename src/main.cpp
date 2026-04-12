@@ -8,7 +8,7 @@
 namespace fs = std::filesystem;
 
 int main() {
-    std::string pbfPath = "map_data/chennai_city.osm.pbf";
+    std::string pbfPath = "map_data/chennai.osm.pbf";
     std::string tilesDir = "map_data/tiles";
     int textureRes = 4096;      
     double tileSizeKm = 5.0;    
@@ -30,6 +30,9 @@ int main() {
     MapData mapData;
     std::cout << "Loading OSM data from " << pbfPath << "..." << std::endl;
     mapData.loadFromPbf(pbfPath);
+    
+    std::cout << "Building spatial index (buckets)..." << std::endl;
+    mapData.buildBuckets(tileSizeKm);
 
     if (!fs::exists(tilesDir) || fs::is_empty(tilesDir)) {
         std::cout << "Cache not found or empty...\n";

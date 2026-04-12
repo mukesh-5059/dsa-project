@@ -79,3 +79,90 @@ void MapData::loadFromPbf(const std::string& filename) {
     //}
     std::cout << "Loaded " << nodes.size() << " nodes, " << ways.size() << " ways, and " << places.size() << " places.\n";
 }
+
+void MapData::buildBuckets(double kmPerBucket) {
+    buckets.clear();
+    degLatPerBucket = kmPerBucket / 111.32;
+    double centerLat = (bounds.min_lat + bounds.max_lat) / 2.0;
+    degLonPerBucket = kmPerBucket / (111.32 * std::cos(centerLat * M_PI / 180.0));
+    bucketCols = std::ceil((bounds.max_lon - bounds.min_lon) / degLonPerBucket);
+    bucketRows = std::ceil((bounds.max_lat - bounds.min_lat) / degLatPerBucket);
+
+    std::cout << "Building " << bucketCols << "x" << bucketRows << " buckets for rendering and fast lookup..." << std::endl;
+
+    for (const auto& way : ways) {
+        double wMinLon = 180, wMaxLon = -180, wMinLat = 90, wMaxLat = -90;
+        bool hasNodes = false;
+        for (long long id : way.node_ids) {
+            if (nodes.count(id)) {
+                const auto& n = nodes.at(id);
+                wMinLon = std::min(wMinLon, n.lon); wMaxLon = std::max(wMaxLon, n.lon);
+                wMinLat = std::min(wMinLat, n.lat); wMaxLat = std::max(wMaxLat, n.lat);
+                hasNodes = true;
+            }
+        }
+        if (!hasNodes) continue;
+
+        int cStart = std::max(0, (int)floor((wMinLon - bounds.min_lon) / degLonPerBucket));
+        int cEnd   = std::min(bucketCols - 1, (int)floor((wMaxLon - bounds.min_lon) / degLonPerBucket));
+        int rStart = std::max(0, (int)floor((bounds.max_lat - wMaxLat) / degLatPerBucket));
+        int rEnd   = std::min(bucketRows - 1, (int)floor((bounds.max_lat - wMinLat) / degLatPerBucket));
+
+        for (int r = rStart; r <= rEnd; r++) {
+            for (int c = cStart; c <= cEnd; c++) buckets[{r, c}].push_back(&way);
+        }
+    }
+}
+
+long long MapData::findNearestNode(double lat, double lon) {
+    int c = (int)floor((lon - bounds.min_lon) / degLonPerBucket);
+    int r = (int)floor((bounds.max_lat - lat) / degLatPerBucket);
+
+    long long nearestId = -1;
+    double minDistance = std::numeric_limits<double>::max();
+
+    auto searchInBucket = [&](int br, int bc) {
+        if (br < 0 || br >= bucketRows || bc < 0 || bc >= bucketCols) return;
+        if (buckets.count({br, bc})) {
+            for (const auto* wayPtr : buckets.at({br, bc})) {
+                // User requirement: only roads/highways
+                if (!wayPtr->tags.count("highway")) continue;
+
+                for (long long id : wayPtr->node_ids) {
+                    if (nodes.count(id)) {
+                        const auto& node = nodes.at(id);
+                        double dLat = node.lat - lat;
+                        double dLon = node.lon - lon;
+                        double distSq = dLat * dLat + dLon * dLon;
+                        if (distSq < minDistance) {
+                            minDistance = distSq;
+                            nearestId = id;
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    // Search target bucket and immediate neighbors (1km x 1km or 5km x 5km)
+    for (int dr = -1; dr <= 1; dr++) {
+        for (int dc = -1; dc <= 1; dc++) {
+            searchInBucket(r + dr, c + dc);
+        }
+    }
+
+    // Fallback to full search only if no road node was found in local neighborhood
+    if (nearestId == -1) {
+        std::cout << "Warning: No road node found in local buckets, performing full search..." << std::endl;
+        for (const auto& [id, node] : nodes) {
+            double dLat = node.lat - lat;
+            double dLon = node.lon - lon;
+            double distSq = dLat * dLat + dLon * dLon;
+            if (distSq < minDistance) {
+                minDistance = distSq;
+                nearestId = id;
+            }
+        }
+    }
+    return nearestId;
+}

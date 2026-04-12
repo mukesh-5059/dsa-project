@@ -45,7 +45,7 @@ void fillPolygon(Image* dst, const std::vector<Vector2>& points, Color color) {
     }
 }
 
-void MapRenderer::generateAllTiles(const MapData& data, int textureRes, double kmPerTile, const std::string& outputDir, int numThreads) {
+void MapRenderer::generateAllTiles(MapData& data, int textureRes, double kmPerTile, const std::string& outputDir, int numThreads) {
     if (!fs::exists(outputDir)) fs::create_directories(outputDir);
 
     RenderMeta meta;
@@ -62,30 +62,7 @@ void MapRenderer::generateAllTiles(const MapData& data, int textureRes, double k
 
     std::cout << "Target: " << kmPerTile << "km per tile at " << textureRes << "px resolution.\n";
     std::cout << "Grid: " << meta.cols << "x" << meta.rows << " tiles (" << meta.cols * meta.rows << " total).\n";
-    std::cout << "Indexing ways for parallel rendering...\n";
-
-    std::unordered_map<std::pair<int, int>, std::vector<const WayData*>, renderer_pair_hash> buckets;
-    for (const auto& way : data.ways) {
-        double wMinLon = 180, wMaxLon = -180, wMinLat = 90, wMaxLat = -90;
-        bool hasNodes = false;
-        for (long long id : way.node_ids) {
-            if (data.nodes.count(id)) {
-                const auto& n = data.nodes.at(id);
-                wMinLon = std::min(wMinLon, n.lon); wMaxLon = std::max(wMaxLon, n.lon);
-                wMinLat = std::min(wMinLat, n.lat); wMaxLat = std::max(wMaxLat, n.lat);
-                hasNodes = true;
-            }
-        }
-        if (!hasNodes) continue;
-        int cStart = std::max(0, (int)floor((wMinLon - meta.minLon) / meta.degLonPerTile));
-        int cEnd   = std::min(meta.cols - 1, (int)floor((wMaxLon - meta.minLon) / meta.degLonPerTile));
-        int rStart = std::max(0, (int)floor((meta.maxLat - wMaxLat) / meta.degLatPerTile));
-        int rEnd   = std::min(meta.rows - 1, (int)floor((meta.maxLat - wMinLat) / meta.degLatPerTile));
-        for (int r = rStart; r <= rEnd; r++) {
-            for (int c = cStart; c <= cEnd; c++) buckets[{r, c}].push_back(&way);
-        }
-    }
-
+    
     std::cout << "Rendering tiles with " << numThreads << " threads...\n";
 
     std::vector<std::thread> workers;
@@ -94,7 +71,7 @@ void MapRenderer::generateAllTiles(const MapData& data, int textureRes, double k
         int startRow = i * rowsPerThread;
         int endRow = std::min(startRow + rowsPerThread, meta.rows);
         if (startRow >= meta.rows) break;
-        workers.emplace_back(&MapRenderer::renderTileRange, std::ref(data), std::ref(meta), std::ref(buckets), startRow, endRow, outputDir);
+        workers.emplace_back(&MapRenderer::renderTileRange, std::ref(data), std::ref(meta), startRow, endRow, outputDir);
     }
 
     for (auto& t : workers) {
@@ -105,18 +82,17 @@ void MapRenderer::generateAllTiles(const MapData& data, int textureRes, double k
 }
 
 void MapRenderer::renderTileRange(const MapData& data, const RenderMeta& meta, 
-                                 const std::unordered_map<std::pair<int, int>, std::vector<const WayData*>, renderer_pair_hash>& buckets,
                                  int startRow, int endRow, const std::string& outputDir) {
     for (int r = startRow; r < endRow; r++) {
         for (int c = 0; c < meta.cols; c++) {
-            if (!buckets.count({r, c})) continue;
+            if (!data.buckets.count({r, c})) continue;
 
             double tileMinLon = meta.minLon + (c * meta.degLonPerTile);
             double tileMaxLat = meta.maxLat - (r * meta.degLatPerTile);
 
             Image image = GenImageColor(meta.textureRes, meta.textureRes, { 5, 5, 10, 255 });
             
-            for (const auto* wayPtr : buckets.at({r, c})) {
+            for (const auto* wayPtr : data.buckets.at({r, c})) {
                 const WayData& way = *wayPtr;
                 Color fillColor = {0, 0, 0, 0};
                 if (way.tags.count("natural") && way.tags.at("natural") == "water") fillColor = { 0, 80, 180, 255 };
@@ -140,7 +116,7 @@ void MapRenderer::renderTileRange(const MapData& data, const RenderMeta& meta,
                 }
             }
             
-            for (const auto* wayPtr : buckets.at({r, c})) {
+            for (const auto* wayPtr : data.buckets.at({r, c})) {
                 const WayData& way = *wayPtr;
                 Color wayColor = { 80, 80, 100, 255 }; 
                 int thickness = 1;
