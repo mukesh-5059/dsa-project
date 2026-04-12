@@ -33,6 +33,12 @@ struct MapBounds {
     double max_lon;
 };
 
+struct map_pair_hash {
+    inline std::size_t operator()(const std::pair<int, int>& v) const {
+        return v.first * 100000 + v.second;
+    }
+};
+
 class MapData {
 public:
     std::unordered_map<long long, NodeData> nodes;
@@ -40,7 +46,23 @@ public:
     std::vector<PlaceData> places;
     MapBounds bounds;
 
+    std::unordered_map<std::pair<int, int>, std::vector<const WayData*>, map_pair_hash> buckets;
+    double degLonPerBucket = 0.01;
+    double degLatPerBucket = 0.01;
+    int bucketCols = 0;
+    int bucketRows = 0;
+
+    NodeData startNode;
+    NodeData endNode;
+    long long startNodeId = -1;
+    long long endNodeId = -1;
+    bool hasStart = false;
+    bool hasEnd = false;
+    std::vector<long long> pathNodeIds;
+
     void loadFromPbf(const std::string& filename);
+    void buildBuckets(double kmPerBucket = 1.0);
+    long long findNearestNode(double lat, double lon);
 };
 
 #endif

@@ -42,12 +42,14 @@ private:
     void handleInput();
     void updateVisibleTiles();
     void draw();
+    void drawPath();
     void drawLegend();
 
     std::string m_tilesDir;
     MapData& m_mapData;
     MapMetadata m_meta;
     Camera2D m_camera;
+    int tilesInVram;
     
     bool m_showLegend = false;
     std::vector<MapLabel> m_labels;

@@ -16,6 +16,7 @@ MapViewer::MapViewer(const std::string& tilesDir, MapData& data, int res, double
     m_camera.target = { worldWidth / 2.0f, worldHeight / 2.0f };
     m_camera.rotation = 0.0f;
     m_camera.zoom = 0.01f;
+    tilesInVram = 16;
 }
 
 MapViewer::~MapViewer() {
@@ -60,9 +61,49 @@ void MapViewer::buildLabels() {
 }
 
 void MapViewer::handleInput() {
-    if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
+    if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT) && !IsKeyDown(KEY_LEFT_CONTROL)) {
         Vector2 delta = GetMouseDelta(); m_camera.target = Vector2Add(m_camera.target, Vector2Scale(delta, -1.0f / m_camera.zoom));
     }
+    
+    if (IsKeyDown(KEY_LEFT_CONTROL)) {
+        Vector2 mouseWorldPos = GetScreenToWorld2D(GetMousePosition(), m_camera);
+        double lon = (mouseWorldPos.x / m_meta.scaleLon) + m_meta.minLon;
+        double lat = m_meta.maxLat - (mouseWorldPos.y / m_meta.scaleLat);
+
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            long long id = m_mapData.findNearestNode(lat, lon);
+            if (id != -1) {
+                m_mapData.startNodeId = id;
+                m_mapData.startNode = m_mapData.nodes[id];
+                m_mapData.hasStart = true;
+                std::cout << "Start point set to Node " << id << ": " << m_mapData.startNode.lat << ", " << m_mapData.startNode.lon << std::endl;
+                
+                // to be replaced with pathfinding
+                m_mapData.pathNodeIds.clear();
+                if (m_mapData.hasEnd) {
+                    m_mapData.pathNodeIds.push_back(m_mapData.startNodeId);
+                    m_mapData.pathNodeIds.push_back(m_mapData.endNodeId);
+                }
+            }
+        }
+        if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+            long long id = m_mapData.findNearestNode(lat, lon);
+            if (id != -1) {
+                m_mapData.endNodeId = id;
+                m_mapData.endNode = m_mapData.nodes[id];
+                m_mapData.hasEnd = true;
+                std::cout << "End point set to Node " << id << ": " << m_mapData.endNode.lat << ", " << m_mapData.endNode.lon << std::endl;
+                
+                // to be replaced with pathfinding
+                m_mapData.pathNodeIds.clear();
+                if (m_mapData.hasStart) {
+                    m_mapData.pathNodeIds.push_back(m_mapData.startNodeId);
+                    m_mapData.pathNodeIds.push_back(m_mapData.endNodeId);
+                }
+            }
+        }
+    }
+
     float wheel = GetMouseWheelMove();
     if (wheel != 0) {
         Vector2 mouseWorldPos = GetScreenToWorld2D(GetMousePosition(), m_camera);
@@ -71,6 +112,48 @@ void MapViewer::handleInput() {
         m_camera.zoom = std::clamp(m_camera.zoom, 0.0001f, 10.0f);
     }
     if (IsKeyPressed(KEY_L)) m_showLegend = !m_showLegend;
+}
+
+void MapViewer::drawPath() {
+    if (m_mapData.pathNodeIds.empty()) return;
+
+    float thickness = 4.0f / m_camera.zoom;
+    
+    for (size_t i = 0; i < m_mapData.pathNodeIds.size() - 1; i++) {
+        long long id1 = m_mapData.pathNodeIds[i];
+        long long id2 = m_mapData.pathNodeIds[i+1];
+        
+        if (m_mapData.nodes.count(id1) && m_mapData.nodes.count(id2)) {
+            const auto& n1 = m_mapData.nodes.at(id1);
+            const auto& n2 = m_mapData.nodes.at(id2);
+            
+            Vector2 p1 = { 
+                (float)((n1.lon - m_meta.minLon) * m_meta.scaleLon), 
+                (float)((m_meta.maxLat - n1.lat) * m_meta.scaleLat) 
+            };
+            Vector2 p2 = { 
+                (float)((n2.lon - m_meta.minLon) * m_meta.scaleLon), 
+                (float)((m_meta.maxLat - n2.lat) * m_meta.scaleLat) 
+            };
+            
+            DrawLineEx(p1, p2, thickness, RED);
+        }
+    }
+
+    if (m_mapData.hasStart) {
+        Vector2 startPos = { 
+            (float)((m_mapData.startNode.lon - m_meta.minLon) * m_meta.scaleLon), 
+            (float)((m_meta.maxLat - m_mapData.startNode.lat) * m_meta.scaleLat) 
+        };
+        DrawCircleV(startPos, thickness * 1.5f, GREEN);
+    }
+    if (m_mapData.hasEnd) {
+        Vector2 endPos = { 
+            (float)((m_mapData.endNode.lon - m_meta.minLon) * m_meta.scaleLon), 
+            (float)((m_meta.maxLat - m_mapData.endNode.lat) * m_meta.scaleLat) 
+        };
+        DrawCircleV(endPos, thickness * 1.5f, BLUE);
+    }
 }
 
 void MapViewer::updateVisibleTiles() {
@@ -92,7 +175,7 @@ void MapViewer::updateVisibleTiles() {
                 if (!m_tileCache.count({r, c})) {
                     std::string path = m_tilesDir + "/tile_" + std::to_string(r) + "_" + std::to_string(c) + ".png";
                     if (fs::exists(path)) {
-                        if (loaded < 1 && m_tileCache.size() < 32) {
+                        if (loaded < 1 && m_tileCache.size() < tilesInVram) {
                             m_tileCache[{r, c}] = LoadTexture(path.c_str());
                             GenTextureMipmaps(&m_tileCache[{r, c}]); SetTextureFilter(m_tileCache[{r, c}], TEXTURE_FILTER_BILINEAR);
                             loaded++;
@@ -102,7 +185,7 @@ void MapViewer::updateVisibleTiles() {
             }
         }
     }
-    if (m_tileCache.size() >= 32) {
+    if (m_tileCache.size() >= tilesInVram) {
         for (auto it = m_tileCache.begin(); it != m_tileCache.end();) {
             bool is_v = false; for (auto& v : visible) if (v == it->first) is_v = true;
             if (!is_v) { UnloadTexture(it->second); it = m_tileCache.erase(it); } else ++it;
@@ -157,6 +240,8 @@ void MapViewer::draw() {
             DrawTextEx(GetFontDefault(), lb.name.c_str(), {lb.worldPos.x + (6.0f * labelScale), lb.worldPos.y}, finalFontSize, 1.0f, WHITE);
         }
     }
+    
+    drawPath();
 
     double homeLon = 80.084, homeLat = 12.919;
     float homeX = (float)((homeLon - m_meta.minLon) * m_meta.scaleLon), homeY = (float)((m_meta.maxLat - homeLat) * m_meta.scaleLat);
@@ -169,7 +254,7 @@ void MapViewer::draw() {
     DrawRectangle(10, 10, 300, 120, Fade(BLACK, 0.8f));
     DrawText("MAP VIEWER", 20, 20, 10, SKYBLUE);
     DrawText("Right Click: Pan | Wheel: Zoom", 20, 35, 10, WHITE);
-    DrawText(TextFormat("Tiles in VRAM: %d / 32", (int)m_tileCache.size()), 20, 50, 10, GREEN);
+    DrawText(TextFormat("Tiles in VRAM: %d / %d", (int)m_tileCache.size(), (int)tilesInVram), 20, 50, 10, GREEN);
     DrawText(TextFormat("Zoom: %.4f | 'L' for Legend", m_camera.zoom), 20, 65, 10, WHITE);
     DrawText(TextFormat("FPS: %d", GetFPS()), 20, 80, 10, LIME);
     if (m_meta.textureRes * m_camera.zoom < 64.0f) DrawText("ZOOM IN TO RENDER TILES", 20, 95, 10, YELLOW);
@@ -179,8 +264,13 @@ void MapViewer::draw() {
 
 void MapViewer::run() {
     InitWindow(1280, 720, "DSA Project - Map Viewer");
-    SetTargetFPS(60); m_camera.offset = { (float)GetScreenWidth() / 2.0f, (float)GetScreenHeight() / 2.0f };
-    while (!WindowShouldClose()) { handleInput(); updateVisibleTiles(); draw(); }
+    SetTargetFPS(60);
+    m_camera.offset = { (float)GetScreenWidth() / 2.0f, (float)GetScreenHeight() / 2.0f };
+    while (!WindowShouldClose()){
+        handleInput();
+        updateVisibleTiles();
+        draw();
+    }
     std::cout << "Closing Viewer: Unloading textures...\n";
     for (auto& [pos, tex] : m_tileCache) UnloadTexture(tex);
     m_tileCache.clear();
